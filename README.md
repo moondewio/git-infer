@@ -4,7 +4,13 @@ Commit your staged files with an auto-generated message.
 
 ## Installation
 
-Just make sure `git-infer` is executable and in your $PATH.
+### Antigen
+
+`antigen bundle fvictorio/git-infer`
+
+### Manually
+
+Clone this repository and add it to your $PATH.
 
 ## Examples
 
