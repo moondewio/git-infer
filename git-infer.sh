@@ -1,3 +1,53 @@
 #!/usr/bin/env bash
-FILES=$(git diff --staged --name-only | sed 's/$/, /g' | xargs echo | sed 's/,$//')
-git commit -m "Update ${FILES}"
+COMMIT_MSG=$(git diff --staged --name-status | awk '
+BEGIN {
+  updatedCount = 0;
+  addedCount = 0;
+}
+
+$1 == "M" {
+  updated[updatedCount] = $2;
+  updatedCount += 1
+}
+
+$1 == "A" {
+  added[addedCount] = $2;
+  addedCount += 1
+}
+
+END {
+  if (updatedCount > 0) {
+    updatedMsg = "";
+    for (i = 0; i + 1 < updatedCount; i++) {
+      updatedMsg = updatedMsg updated[i] ", "
+    };
+    updatedMsg = updatedMsg updated[updatedCount - 1]
+    updatedMsg = "Update " updatedMsg
+  }
+
+  if (addedCount > 0) {
+    addedMsg = "";
+    for (i = 0; i + 1 < addedCount; i++) {
+      addedMsg = addedMsg added[i] ", "
+    };
+    addedMsg = addedMsg added[addedCount - 1]
+    addedMsg = "Add " addedMsg
+  }
+
+  if (updatedCount > 0 && addedCount > 0) {
+    print addedMsg ". " updatedMsg "."
+  } else if (updatedCount > 0) {
+    print updatedMsg
+  } else if (addedCount > 0) {
+    print addedMsg
+  }
+}
+')
+
+if [ -z "${COMMIT_MSG}" ]
+then
+  echo "git-infer: Nothing added or updated"
+  exit 1
+fi
+
+git commit -m "${COMMIT_MSG}"
