@@ -13,7 +13,7 @@ $ echo node_modules > .gitignore
 
 $ git add .gitignore
 
-$ git infer
+$ git infer # this will create a commit
 [master (root-commit) 2b34524] Add .gitignore
  1 file changed, 1 insertion(+)
  create mode 100644 .gitignore
