@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
-COMMIT_MSG=$(git diff --staged --name-status | awk '
+
+COMMAND="git diff --staged --name-status"
+ 
+while getopts ":a" opt; do
+  case $opt in
+    a)
+      COMMAND="git diff --name-status"
+      ;;
+  esac
+done
+
+COMMIT_MSG=$($COMMAND | awk '
 BEGIN {
   updatedCount = 0;
   addedCount = 0;
