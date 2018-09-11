@@ -10,7 +10,7 @@ Commit your staged files with an auto-generated message.
 
 ### Manually
 
-Clone this repository and add it to your $PATH.
+Clone this repository and add it to your `$PATH`.
 
 ## Examples
 
