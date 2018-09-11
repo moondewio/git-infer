@@ -3,6 +3,7 @@ COMMIT_MSG=$(git diff --staged --name-status | awk '
 BEGIN {
   updatedCount = 0;
   addedCount = 0;
+  deletedCount = 0;
 }
 
 $1 == "M" {
@@ -13,6 +14,11 @@ $1 == "M" {
 $1 == "A" {
   added[addedCount] = $2;
   addedCount += 1
+}
+
+$1 == "D" {
+  deleted[deletedCount] = $2;
+  deletedCount += 1
 }
 
 END {
@@ -34,19 +40,30 @@ END {
     addedMsg = "Add " addedMsg
   }
 
-  if (updatedCount > 0 && addedCount > 0) {
-    print addedMsg ". " updatedMsg "."
-  } else if (updatedCount > 0) {
+  if (deletedCount > 0) {
+    deletedMsg = "";
+    for (i = 0; i + 1 < deletedCount; i++) {
+      deletedMsg = deletedMsg deleted[i] ", "
+    };
+    deletedMsg = deletedMsg deleted[deletedCount - 1]
+    deletedMsg = "Delete " deletedMsg
+  }
+
+  if (updatedCount > 0) {
     print updatedMsg
-  } else if (addedCount > 0) {
+  }
+  if (addedCount > 0) {
     print addedMsg
+  }
+  if (deletedCount > 0) {
+    print deletedMsg
   }
 }
 ')
 
 if [ -z "${COMMIT_MSG}" ]
 then
-  echo "git-infer: Nothing added or updated"
+  echo "git-infer: Nothing added, updated or deleted"
   exit 1
 fi
 
