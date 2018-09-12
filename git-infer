@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
 COMMAND="git diff --staged --name-status"
+TYPE=0
  
-while getopts ":a" opt; do
+while getopts ":an" opt; do
   case $opt in
     a)
       COMMAND="git diff --name-status"
+      TYPE=1
+      ;;
+    n)
+      COMMAND="git status --porcelain"
+      TYPE=2
       ;;
   esac
 done
@@ -15,23 +21,24 @@ BEGIN {
   updatedCount = 0;
   addedCount = 0;
   deletedCount = 0;
+  newCount = 0;
 }
-
 $1 == "M" {
   updated[updatedCount] = $2;
   updatedCount += 1
 }
-
 $1 == "A" {
   added[addedCount] = $2;
   addedCount += 1
 }
-
 $1 == "D" {
   deleted[deletedCount] = $2;
   deletedCount += 1
 }
-
+$1 == "??" {
+  new[newCount] = $2;
+  newCount += 1
+}
 END {
   if (updatedCount > 0) {
     updatedMsg = "";
@@ -60,14 +67,69 @@ END {
     deletedMsg = "Delete " deletedMsg
   }
 
+  if (newCount >0) {
+    newMsg = "";
+    for (i = 0; i + 1 < newCount; i++) {
+      newMsg = newMsg new[i] ", "
+    };
+    newMsg = newMsg new[newCount - 1]
+    newMsg = "New tracked files " newMsg
+  }
+
+  changesCount = 0;
+
   if (updatedCount > 0) {
-    print updatedMsg
+    changesCount += 1
   }
+
   if (addedCount > 0) {
-    print addedMsg
+    changesCount += 1
   }
+
   if (deletedCount > 0) {
-    print deletedMsg
+    changesCount += 1
+  }
+
+  if (newCount > 0) {
+    changesCount += 1
+  }
+
+  if (changesCount > 1) {
+    printf "Several changes\n\n"
+
+    if (updatedCount > 0) {
+      print updatedMsg
+    }
+
+    if (addedCount > 0) {
+      print addedMsg
+    }
+
+    if (deletedCount > 0) {
+      print deletedMsg
+    }
+
+    if (newCount > 0) {
+      print newMsg
+    }
+  }
+
+  if (changesCount == 1) {
+    if (updatedCount > 0) {
+      print updatedMsg
+    }
+
+    if (addedCount > 0) {
+      print addedMsg
+    }
+
+    if (deletedCount > 0) {
+      print deletedMsg
+    }
+
+    if (newCount > 0) {
+      print newMsg
+    }
   }
 }
 ')
@@ -76,6 +138,14 @@ if [ -z "${COMMIT_MSG}" ]
 then
   echo "git-infer: Nothing added, updated or deleted"
   exit 1
+fi
+
+if [ "$TYPE" -eq "1" ];then
+  git add -u;
+fi
+
+if [ "$TYPE" -eq "2" ];then
+  git add .;
 fi
 
 git commit -m "${COMMIT_MSG}" "$@"
