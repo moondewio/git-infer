@@ -6,11 +6,11 @@ TYPE=0
 while getopts ":an" opt; do
   case $opt in
     a)
-      COMMAND="git diff --name-status"
+      COMMAND="git status --porcelain -uno"
       TYPE=1
       ;;
     n)
-      COMMAND="git status --porcelain"
+      COMMAND="git status --porcelain -uall"
       TYPE=2
       ;;
   esac
