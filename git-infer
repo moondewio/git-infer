@@ -25,23 +25,18 @@ BEGIN {
   updatedCount = 0;
   addedCount = 0;
   deletedCount = 0;
-  newCount = 0;
 }
 $1 == "M" {
   updated[updatedCount] = $2;
   updatedCount += 1
 }
-$1 == "A" {
+$1 == "A" || $1 == "??" {
   added[addedCount] = $2;
   addedCount += 1
 }
 $1 == "D" {
   deleted[deletedCount] = $2;
   deletedCount += 1
-}
-$1 == "??" {
-  new[newCount] = $2;
-  newCount += 1
 }
 END {
   if (updatedCount > 0) {
@@ -62,20 +57,6 @@ END {
     addedMsg = "Add " addedMsg
   }
 
-  if (newCount > 0) {
-    newMsg = "";
-    for (i = 0; i + 1 < newCount; i++) {
-      newMsg = newMsg new[i] ", "
-    };
-    newMsg = newMsg new[newCount - 1]
-
-    if (addedCount > 0) {
-      addedMsg = addedMsg ", " newMsg
-    } else {
-      addedMsg = "Add " newMsg
-    };
-  }
-
   if (deletedCount > 0) {
     deletedMsg = "";
     for (i = 0; i + 1 < deletedCount; i++) {
@@ -91,7 +72,7 @@ END {
     changesCount += 1
   }
 
-  if (addedCount > 0 || newCount > 0) {
+  if (addedCount > 0) {
     changesCount += 1
   }
 
@@ -106,7 +87,7 @@ END {
       print updatedMsg
     }
 
-    if (addedCount > 0 || newCount > 0) {
+    if (addedCount > 0) {
       print addedMsg
     }
 
@@ -120,7 +101,7 @@ END {
       print updatedMsg
     }
 
-    if (addedCount > 0 || newCount > 0) {
+    if (addedCount > 0) {
       print addedMsg
     }
 
@@ -145,5 +126,4 @@ if [ "$TYPE" = "$all_untracked" ];then
   git add .;
 fi
 
-# -A is is not recognized by `git commit` - needs to be removed
-git commit -m "${COMMIT_MSG}" "${@//"-A"}"
+git commit -m "${COMMIT_MSG}"
