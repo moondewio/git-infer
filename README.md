@@ -32,3 +32,7 @@ $ git infer
 [master 0b7132a] Update .gitignore
  1 file changed, 1 insertion(+)
 ```
+
+## Disclaimer
+
+The vast majority of times, you shouldn't use this.
