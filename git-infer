@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 
+only_staged="only-staged"
+all_tracked="all-only-tracked"
+all_untracked="all-include-untracked"
+
 COMMAND="git diff --staged --name-status"
-TYPE=0
+TYPE=$only_staged
  
-while getopts ":an" opt; do
+while getopts ":aA" opt; do
   case $opt in
     a)
       COMMAND="git status --porcelain -uno"
-      TYPE=1
+      TYPE=$all_tracked
       ;;
-    n)
+    A)
       COMMAND="git status --porcelain -uall"
-      TYPE=2
+      TYPE=$all_untracked
       ;;
   esac
 done
@@ -58,6 +62,20 @@ END {
     addedMsg = "Add " addedMsg
   }
 
+  if (newCount > 0) {
+    newMsg = "";
+    for (i = 0; i + 1 < newCount; i++) {
+      newMsg = newMsg new[i] ", "
+    };
+    newMsg = newMsg new[newCount - 1]
+
+    if (addedCount > 0) {
+      addedMsg = addedMsg ", " newMsg
+    } else {
+      addedMsg = "Add " newMsg
+    };
+  }
+
   if (deletedCount > 0) {
     deletedMsg = "";
     for (i = 0; i + 1 < deletedCount; i++) {
@@ -67,30 +85,17 @@ END {
     deletedMsg = "Delete " deletedMsg
   }
 
-  if (newCount >0) {
-    newMsg = "";
-    for (i = 0; i + 1 < newCount; i++) {
-      newMsg = newMsg new[i] ", "
-    };
-    newMsg = newMsg new[newCount - 1]
-    newMsg = "New tracked files " newMsg
-  }
-
   changesCount = 0;
 
   if (updatedCount > 0) {
     changesCount += 1
   }
 
-  if (addedCount > 0) {
+  if (addedCount > 0 || newCount > 0) {
     changesCount += 1
   }
 
   if (deletedCount > 0) {
-    changesCount += 1
-  }
-
-  if (newCount > 0) {
     changesCount += 1
   }
 
@@ -101,16 +106,12 @@ END {
       print updatedMsg
     }
 
-    if (addedCount > 0) {
+    if (addedCount > 0 || newCount > 0) {
       print addedMsg
     }
 
     if (deletedCount > 0) {
       print deletedMsg
-    }
-
-    if (newCount > 0) {
-      print newMsg
     }
   }
 
@@ -119,16 +120,12 @@ END {
       print updatedMsg
     }
 
-    if (addedCount > 0) {
+    if (addedCount > 0 || newCount > 0) {
       print addedMsg
     }
 
     if (deletedCount > 0) {
       print deletedMsg
-    }
-
-    if (newCount > 0) {
-      print newMsg
     }
   }
 }
@@ -140,12 +137,13 @@ then
   exit 1
 fi
 
-if [ "$TYPE" -eq "1" ];then
+if [ "$TYPE" = "$all_tracked" ];then
   git add -u;
 fi
 
-if [ "$TYPE" -eq "2" ];then
+if [ "$TYPE" = "$all_untracked" ];then
   git add .;
 fi
 
-git commit -m "${COMMIT_MSG}" "$@"
+# -A is is not recognized by `git commit` - needs to be removed
+git commit -m "${COMMIT_MSG}" "${@//"-A"}"
