@@ -33,6 +33,11 @@ $ git infer
  1 file changed, 1 insertion(+)
 ```
 
+## Options
+
+- `-a`: Include all tracked files.
+- `-A`: Include all files, even the untracked.
+
 ## Disclaimer
 
 The vast majority of times, you shouldn't use this.
