@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
 
+only_staged="only-staged"
+all_tracked="all-only-tracked"
+all_untracked="all-include-untracked"
+
 COMMAND="git diff --staged --name-status"
+TYPE=$only_staged
  
-while getopts ":a" opt; do
+while getopts ":aA" opt; do
   case $opt in
     a)
-      COMMAND="git diff --name-status"
+      COMMAND="git status --porcelain -uno"
+      TYPE=$all_tracked
+      ;;
+    A)
+      COMMAND="git status --porcelain -uall"
+      TYPE=$all_untracked
       ;;
   esac
 done
@@ -16,22 +26,18 @@ BEGIN {
   addedCount = 0;
   deletedCount = 0;
 }
-
 $1 == "M" {
   updated[updatedCount] = $2;
   updatedCount += 1
 }
-
-$1 == "A" {
+$1 == "A" || $1 == "??" {
   added[addedCount] = $2;
   addedCount += 1
 }
-
 $1 == "D" {
   deleted[deletedCount] = $2;
   deletedCount += 1
 }
-
 END {
   if (updatedCount > 0) {
     updatedMsg = "";
@@ -60,14 +66,48 @@ END {
     deletedMsg = "Delete " deletedMsg
   }
 
+  changesCount = 0;
+
   if (updatedCount > 0) {
-    print updatedMsg
+    changesCount += 1
   }
+
   if (addedCount > 0) {
-    print addedMsg
+    changesCount += 1
   }
+
   if (deletedCount > 0) {
-    print deletedMsg
+    changesCount += 1
+  }
+
+  if (changesCount > 1) {
+    printf "Several changes\n\n"
+
+    if (updatedCount > 0) {
+      print updatedMsg
+    }
+
+    if (addedCount > 0) {
+      print addedMsg
+    }
+
+    if (deletedCount > 0) {
+      print deletedMsg
+    }
+  }
+
+  if (changesCount == 1) {
+    if (updatedCount > 0) {
+      print updatedMsg
+    }
+
+    if (addedCount > 0) {
+      print addedMsg
+    }
+
+    if (deletedCount > 0) {
+      print deletedMsg
+    }
   }
 }
 ')
@@ -78,4 +118,12 @@ then
   exit 1
 fi
 
-git commit -m "${COMMIT_MSG}" "$@"
+if [ "$TYPE" = "$all_tracked" ];then
+  git add -u;
+fi
+
+if [ "$TYPE" = "$all_untracked" ];then
+  git add .;
+fi
+
+git commit -m "${COMMIT_MSG}"
