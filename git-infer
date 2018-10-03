@@ -1,41 +1,34 @@
 #!/usr/bin/env bash
 
-only_staged="only-staged"
-all_tracked="all-only-tracked"
-all_untracked="all-include-untracked"
-
-COMMAND="git diff --staged --name-status"
-TYPE=$only_staged
- 
 while getopts ":aA" opt; do
   case $opt in
     a)
-      COMMAND="git status --porcelain -uno"
-      TYPE=$all_tracked
+      git add -u
       ;;
     A)
-      COMMAND="git status --porcelain -uall"
-      TYPE=$all_untracked
+      git add .
       ;;
   esac
 done
 
-COMMIT_MSG=$($COMMAND | awk '
+STATUS=$(git status --porcelain | grep -v '^ ' | grep -v '^?')
+
+COMMIT_MSG=$(awk '
 BEGIN {
   updatedCount = 0;
   addedCount = 0;
   deletedCount = 0;
 }
 $1 == "M" {
-  updated[updatedCount] = $2;
+  updated[updatedCount] = substr($0, 4);
   updatedCount += 1
 }
 $1 == "A" || $1 == "??" {
-  added[addedCount] = $2;
+  added[addedCount] = substr($0, 4);
   addedCount += 1
 }
 $1 == "D" {
-  deleted[deletedCount] = $2;
+  deleted[deletedCount] = substr($0, 4);
   deletedCount += 1
 }
 END {
@@ -110,20 +103,12 @@ END {
     }
   }
 }
-')
+' <<< "$STATUS")
 
 if [ -z "${COMMIT_MSG}" ]
 then
   echo "git-infer: Nothing added, updated or deleted"
   exit 1
-fi
-
-if [ "$TYPE" = "$all_tracked" ];then
-  git add -u;
-fi
-
-if [ "$TYPE" = "$all_untracked" ];then
-  git add .;
 fi
 
 git commit -m "${COMMIT_MSG}"
