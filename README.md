@@ -1,6 +1,6 @@
 # git-infer
 
-Commit your staged files with an auto-generated message.
+Commit your changes with an auto-generated message.
 
 ## Installation
 
