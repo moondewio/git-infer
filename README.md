@@ -6,7 +6,7 @@ Commit your changes with an auto-generated message.
 
 ### Antigen
 
-`antigen bundle fvictorio/git-infer`
+`antigen bundle moondewio/git-infer`
 
 ### Manually
 
